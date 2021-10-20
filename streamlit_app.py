@@ -9,6 +9,7 @@ import seaborn as sns
 import statsmodels
 from statsmodels.nonparametric.smoothers_lowess import lowess
 import streamlit as st
+import pydeck as pdk
 
 
 _lock = RendererAgg.lock
@@ -103,13 +104,70 @@ with row2_2:
 
 ##################### Data wranging for the analytics#######################
 df_t=matches_data.query('year>=@start_year and year<=@end_year')
+
+toss_bat = []
+bat_win = []
+city = []
+lon = []
+lat= []
+lon2 = []
+lat2=[]
+
+loc={'Mumbai':[19.0760,72.8777],
+    'Kolkata':[22.5726,88.3639],
+    'Delhi':[28.704,77.1025],
+    'Bangalore':[12.9716,77.5946],
+    'Hyderabad':[17.3850,78.4867],
+     'Chennai':[13.0827,80.2707],
+     'Chandigarh':[30.7333,76.7794],
+     'Jaipur':[26.9124,75.7873],
+     'Pune':[18.5204,73.8567]
+    }
+
+offset = 0.05
+loc2={'Mumbai':[19.0760+offset,72.8777],
+    'Kolkata':[22.5726+offset,88.3639],
+    'Delhi':[28.704+offset,77.1025],
+    'Bangalore':[12.9716+offset,77.5946],
+    'Hyderabad':[17.3850+offset,78.4867],
+     'Chennai':[13.0827+offset,80.2707],
+     'Chandigarh':[30.7333+offset,76.7794],
+     'Jaipur':[26.9124+offset,75.7873],
+     'Pune':[18.5204+offset,73.8567]
+    }    
+
 for name,group in df_t.groupby('city'):
     choose_bat=len(group[group['toss_decision']=='bat'])
     choose_field=len(group[group['toss_decision']=='field'])
-    bat_win=len(group[group['result']=='runs'])
     field_win=len(group[group['result']=='wickets'])
     toss_win=len(group[group['toss_winner']==group['winner']])
-    toss_bat=len(group[group['toss_decision']=='bat'])
+    toss_bat.append([len(group[group['toss_decision']=='bat'])/len(group)])
+    bat_win.append([len(group[group['result']=='runs'])/len(group)])
+    city.append([name])
+    lon.append([float(loc[name][1])])
+    lat.append([float(loc[name][0])])
+
+    lon2.append([float(loc2[name][1])])
+    lat2.append([float(loc2[name][0])])
+
+df_toss_win_bat = pd.DataFrame(np.hstack((city,toss_bat, bat_win, lon, lat)), columns = ["city","toss_bat","bat_win", "lon", "lat"])
+df_toss_win_bat["lon"] = pd.to_numeric(df_toss_win_bat["lon"])
+df_toss_win_bat["lat"] = pd.to_numeric(df_toss_win_bat["lat"])
+
+# df_toss_win_bat = pd.concat([df_toss_win_bat]*1000)
+df_toss_win_bat = df_toss_win_bat.sample(n=30000, weights = df_toss_win_bat["toss_bat"], replace = True)
+
+
+
+df_toss_win_bat2 = pd.DataFrame(np.hstack((city,toss_bat, bat_win, lon2, lat2)), columns = ["city","toss_bat","bat_win", "lon2", "lat2"])
+df_toss_win_bat2["lon2"] = pd.to_numeric(df_toss_win_bat2["lon2"])
+df_toss_win_bat2["lat2"] = pd.to_numeric(df_toss_win_bat2["lat2"])
+
+# df_toss_win_bat2 = pd.concat([df_toss_win_bat2]*1000)
+df_toss_win_bat2 = df_toss_win_bat2.sample(n=30000, weights = df_toss_win_bat2["bat_win"], replace = True)
+
+
+
 
 
 
@@ -133,6 +191,81 @@ df_bowling_res=(df_bowling.groupby('over').sum()/no_matches)[['total_runs','is_w
 
 #data for scatterplot of runs vs wickets
 df_runs_wickets = df_batting.groupby("id").sum()[["total_runs","is_wicket"]]
+
+
+
+#Does location, toss and who  bat first affect the winner#
+
+row1_spacer1, row1_1, row1_spacer2, row1_2, row1_spacer3 = st.columns(
+    (.1, 2, 1.5, 3, .1)
+    )
+
+row1_1.subheader("Influence of Location and the Impact of Toss on Wins")
+
+with row1_2:
+	st.markdown('<span style="color:blue"> Height of **Blue** bar </span> -> probability that a team decides to bat after winning the toss.', unsafe_allow_html=True)
+	st.markdown('<span style="color:Green"> Height of **Green** bar </span>  -> probability of the team batting first, winning the match', unsafe_allow_html=True)
+
+
+
+row1_spacer1, row1, row1_spacer2= st.columns(
+    (.1, 1, 0.1)
+    )
+
+
+
+def map(data, data2, lat, lon, zoom):
+	    st.write(pdk.Deck(
+	        map_style="mapbox://styles/mapbox/light-v9",
+	        # initial_view_state = pdk.data_utils.compute_view(data),
+	        initial_view_state={
+	            "latitude": lat,
+	            "longitude": lon,
+	            "zoom": 5,
+	            "pitch": 200,
+	        },
+	        layers=[
+	            pdk.Layer(
+	                "HexagonLayer",
+	                id = 'my-hexagon-layer',
+	                layerName = "myname",
+	                data=data,
+	                get_position=["lon", "lat"],
+	                radius=10000,
+	                elevation_scale=100,
+	                elevation_range=[1000, 5000],
+	                pickable=True,
+	                extruded=True,
+	                # colorDomain = [5,5],
+	                colorRange = [[10,0,255]]
+	                # getElevationValue=df_toss_win_bat["count"]
+	            ),
+
+	            pdk.Layer(
+	                "HexagonLayer",
+	                id = 'my-hexagon-layer',
+	                layerName = "myname",
+	                data=data2,
+	                get_position=["lon2", "lat2"],
+	                radius=10000,
+	                elevation_scale=100,
+	                elevation_range=[1000, 5000],
+	                pickable=True,
+	                extruded=True,
+	                # colorDomain = [5,5],
+	                colorRange = [[10,255,0]]
+	                # getElevationValue=df_toss_win_bat["count"]
+	            )
+	        ]
+	    ))
+
+with row1:
+	midpoint = (df_toss_win_bat["lat"].mean(), df_toss_win_bat["lon"].mean())
+	# df_toss_win_bat["count"] = np.random.uniform(low=1000, high=100000, size=(df_toss_win_bat["lat"].shape[0],))
+	map(df_toss_win_bat[["lon","lat"]],df_toss_win_bat2[["lon2","lat2"]], midpoint[0], midpoint[1], 11)
+
+
+
 
 
 ########winner analysis################
@@ -343,3 +476,6 @@ with row2_3, _lock:
     st.subheader('Runs vs Wickets of '+team_name)
     run_vs_wickets()
     # df_runs_wickets
+
+
+
