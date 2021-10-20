@@ -119,7 +119,7 @@ balls_data=balls_data.merge(df_join)
 
 
 df_s=balls_data.query('batting_team==@team_name or bowling_team==@team_name').query('winner==@team_name')
-df_s=balls_data.query('year>=@start_year and year<=@end_year')
+df_s=df_s.query('year>=@start_year and year<=@end_year')
 
 # Team runs,wickets in each over
 df_batting=df_s.query('batting_team==@team_name')
@@ -155,9 +155,9 @@ def runs_overs_plot():
 
   fig1 = Figure()
   ax = fig1.subplots()
-  sns.lineplot(data= df_batting_res["total_runs"], color='#CCCCCC',
+  sns.lineplot(data= df_batting_res["total_runs"], color='#0085CA',
                  label=team_name,ax=ax)
-  sns.lineplot(data=df_bowling_res['total_runs'], color = '#0085CA',
+  sns.lineplot(data=df_bowling_res['total_runs'], color = '#CA5800',
   				 # color=COLORS.get(team_name),
                  label='Opponent',ax=ax)
   ax.legend()
@@ -174,15 +174,16 @@ with row2_1, _lock:
     runs_overs_plot()
     # df_batting_res["total_runs"]
     # df_bowling_res['total_runs']
+    # df_s["winner"]
 
 
 def runs_wickets_plot():
 
   fig1 = Figure()
   ax = fig1.subplots()
-  sns.lineplot(data= df_batting_res["is_wicket"], color='#CCCCCC',
+  sns.lineplot(data= df_batting_res["is_wicket"], color='#0085CA',
                  label=team_name,ax=ax)
-  sns.lineplot(data=df_bowling_res['is_wicket'], color = '#0085CA',
+  sns.lineplot(data=df_bowling_res['is_wicket'], color = '#CA5800',
   				 # color=COLORS.get(team_name),
                  label='Opponent',ax=ax)
   ax.legend()
@@ -245,7 +246,7 @@ row1_1.subheader('Losing Matches Analysis')
 
 
 df_s=balls_data.query('batting_team==@team_name or bowling_team==@team_name').query('winner!=@team_name')
-df_s=balls_data.query('year>=@start_year and year<=@end_year')
+df_s=df_s.query('year>=@start_year and year<=@end_year')
 
 # Team runs,wickets in each over
 df_batting=df_s.query('batting_team==@team_name')
@@ -271,9 +272,9 @@ def runs_overs_plot():
 
   fig1 = Figure()
   ax = fig1.subplots()
-  sns.lineplot(data= df_batting_res["total_runs"], color='#CCCCCC',
+  sns.lineplot(data= df_batting_res["total_runs"], color='#0085CA',
                  label=team_name,ax=ax)
-  sns.lineplot(data=df_bowling_res['total_runs'], color = '#0085CA',
+  sns.lineplot(data=df_bowling_res['total_runs'], color = '#CA5800',
   				 # color=COLORS.get(team_name),
                  label='Opponent',ax=ax)
   ax.legend()
@@ -297,9 +298,9 @@ def runs_wickets_plot():
 
   fig1 = Figure()
   ax = fig1.subplots()
-  sns.lineplot(data= df_batting_res["is_wicket"], color='#CCCCCC',
+  sns.lineplot(data= df_batting_res["is_wicket"], color='#0085CA',
                  label=team_name,ax=ax)
-  sns.lineplot(data=df_bowling_res['is_wicket'], color = '#0085CA',
+  sns.lineplot(data=df_bowling_res['is_wicket'], color = '#CA5800',
   				 # color=COLORS.get(team_name),
                  label='Opponent',ax=ax)
   ax.legend()
@@ -326,7 +327,7 @@ def run_vs_wickets():
     color='#0085CA',ax=ax)
 
   sns.scatterplot(x="total_runs", y="is_wicket",data=pd.DataFrame([[df_runs_wickets["total_runs"].mean(), df_runs_wickets["is_wicket"].mean()]], columns = ["total_runs","is_wicket"]),
-    color='#FF0000',ax=ax, s=100)
+    color='#FF0000',ax=ax, s=100, label = "Mean Point")
 
 
   ax.legend()
@@ -342,6 +343,3 @@ with row2_3, _lock:
     st.subheader('Runs vs Wickets of '+team_name)
     run_vs_wickets()
     # df_runs_wickets
-
-
-
