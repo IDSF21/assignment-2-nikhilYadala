@@ -221,8 +221,8 @@ def map(data, data2, lat, lon, zoom):
 	        initial_view_state={
 	            "latitude": lat,
 	            "longitude": lon,
-	            "zoom": 5,
-	            "pitch": 200,
+	            "zoom": 4.8,
+	            "pitch": 50,
 	        },
 	        layers=[
 	            pdk.Layer(
